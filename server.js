@@ -39,6 +39,15 @@ app.get('/chamados.json', (req, res) => {
   res.json(loadChamados());
 });
 
+app.post('/chamado-retroativo', (req, res) => {
+  chamados.push(req.body);
+  salvarChamados();
+  res.json({ success: true });
+});
+
+
+
+
 app.post('/chamado', upload.fields([
   { name: 'nota_fiscal' },
   { name: 'cte' },
