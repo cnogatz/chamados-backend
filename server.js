@@ -92,7 +92,15 @@ app.patch('/chamado/:id/status', (req, res) => {
     mensagem: mensagem || ""
   });
 
+  
+  if (chamado.status === "Encerrado") {
+    return res.status(403).json({ success: false, message: "Chamado já encerrado." });
+  }
+  if (status === "Encerrado" && !mensagem) {
+    return res.status(400).json({ success: false, message: "Mensagem obrigatória para encerramento." });
+  }
   chamado.status = status;
+
   chamado.ultima_atualizacao = new Date().toISOString();
 
   saveChamados(chamados);
