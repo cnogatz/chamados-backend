@@ -59,3 +59,45 @@ app.post("/chamado-retroativo", (req, res) => {
 });
 
 app.listen(10000, () => console.log("Servidor iniciado na porta 10000"));
+
+
+// Rota para criar novo chamado com arquivos
+app.post("/chamado", upload.fields([
+  { name: "nota_fiscal" },
+  { name: "cte" },
+  { name: "boleto" }
+]), (req, res) => {
+  const { area, responsavel, nota, pedido, data_pagamento, frete, comentarios } = req.body;
+  const id = Date.now().toString();
+  const chamado = {
+    id,
+    area,
+    responsavel,
+    nota,
+    pedido,
+    data_pagamento,
+    frete,
+    comentarios,
+    status: "Fiscal",
+    data_solicitacao: new Date().toISOString(),
+    ultima_atualizacao: new Date().toISOString(),
+    historico: [
+      {
+        data: new Date().toISOString(),
+        de: null,
+        para: "Fiscal",
+        mensagem: "Chamado criado"
+      }
+    ],
+    arquivos: {}
+  };
+
+  const arquivos = req.files;
+  if (arquivos?.nota_fiscal) chamado.arquivos.nota_fiscal = "/" + arquivos.nota_fiscal[0].path;
+  if (arquivos?.cte) chamado.arquivos.cte = "/" + arquivos.cte[0].path;
+  if (arquivos?.boleto) chamado.arquivos.boleto = "/" + arquivos.boleto[0].path;
+
+  chamados.push(chamado);
+  salvarChamados();
+  res.json({ success: true, id });
+});
