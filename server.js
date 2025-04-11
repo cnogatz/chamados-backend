@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configuração do Multer
+// Multer setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './uploads');
@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-
 const upload = multer({ storage });
 
 const DB_FILE = './chamados.json';
@@ -81,6 +80,17 @@ app.patch('/chamado/:id/status', (req, res) => {
 
   saveChamados(chamados);
   res.json({ success: true });
+});
+
+app.delete('/reset', (req, res) => {
+  try {
+    if (fs.existsSync(DB_FILE)) fs.unlinkSync(DB_FILE);
+    fs.rmSync('./uploads', { recursive: true, force: true });
+    fs.mkdirSync('./uploads');
+    res.json({ success: true, message: 'Chamados e uploads apagados.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 app.listen(PORT, () => console.log(`Servidor iniciado na porta ${PORT}`));
