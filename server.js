@@ -12,7 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './uploads');
@@ -22,6 +21,7 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
+
 const upload = multer({ storage });
 
 const DB_FILE = './chamados.json';
@@ -60,7 +60,15 @@ app.post('/chamado', upload.fields([
     ultima_atualizacao: new Date().toISOString(),
     status: "Fiscal",
     ...data,
-    arquivos
+    arquivos,
+    historico: [
+      {
+        data: new Date().toISOString(),
+        de: null,
+        para: "Fiscal",
+        mensagem: "Chamado criado"
+      }
+    ]
   };
 
   const chamados = loadChamados();
@@ -71,11 +79,20 @@ app.post('/chamado', upload.fields([
 });
 
 app.patch('/chamado/:id/status', (req, res) => {
+  const { status, mensagem } = req.body;
   const chamados = loadChamados();
   const chamado = chamados.find(c => c.id === req.params.id);
   if (!chamado) return res.status(404).json({ success: false, message: 'Chamado não encontrado' });
 
-  chamado.status = req.body.status;
+  chamado.historico = chamado.historico || [];
+  chamado.historico.push({
+    data: new Date().toISOString(),
+    de: chamado.status,
+    para: status,
+    mensagem: mensagem || ""
+  });
+
+  chamado.status = status;
   chamado.ultima_atualizacao = new Date().toISOString();
 
   saveChamados(chamados);
